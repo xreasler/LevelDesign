@@ -4,40 +4,101 @@ using System.Collections.Generic;
 using StarterAssets;
 using UnityEngine;
 
-public class doorInteract : MonoBehaviour, IPushInteract
+public class doorInteract : MonoBehaviour
 {
 
-    public FirstPersonController FPC;
-    public PlayerInteract PI;
-    public Rigidbody rb;
-    public float thrust = 1f;
-    private float invertedAxis;
-
-
+   
+    public GameObject _playerRoot;
+    public GameObject objectHeld;
+    private float distance = 3f;
+    private float maxDistanceGrab = 4f;
+    public float range;
     
+   
+    public bool isObjectHeld;
+    public bool tryPickupObject;
+    private float PickupRange = 3f;
+    private float ThrowStrength = 50f;
+
+
+    public void Start()
+    {
+        isObjectHeld = false;
+        tryPickupObject = false;
+        objectHeld = null;
+    }
+
     public void Update()
     {
 
-        invertedAxis -= Input.GetAxis("Mouse X");
-        
-    }
-
-
-    public void Interact()
-    {
-
-        while (Input.GetMouseButton(0))
+        if(Input.GetKey(KeyCode.B))
         {
-            rb.AddRelativeForce(invertedAxis,0,0);
+            if(!isObjectHeld){
+                TryPickObject();
+                tryPickupObject = true;
+            } else 
+            {
+                Debug.Log("ATTEMPTING HOLD");
+                HoldObject();
+            }
+        }else if(isObjectHeld){
+            DropObject();
         }
         
     }
 
-    private void OnTriggerEnter(Collider other)
+    public void TryPickObject()
     {
-        while (Input.GetMouseButton(0))
+        RaycastHit hit;
+
+        Vector3 crossHairPoint = new Vector3(Screen.width / 2f - 30f, Screen.height / 2f + 30f, 0f);
+        Ray ray = Camera.main.ScreenPointToRay(crossHairPoint);
+        
+        
+
+
+        if (Physics.Raycast(ray, out hit, range))
         {
-            rb.AddRelativeForce(invertedAxis,0,0);
+            Debug.Log("CASTING RAY");
+            objectHeld = hit.collider.gameObject;
+            if (tryPickupObject == true)
+            {
+                Debug.Log("DOOR HIT");
+                isObjectHeld = true;
+                objectHeld.GetComponent<Rigidbody>().useGravity = true;
+                objectHeld.GetComponent<Rigidbody>().freezeRotation = false;
+                /**/
+                PickupRange = 2f;
+                ThrowStrength = 10f;
+                distance = 2f;
+                maxDistanceGrab = 3f;
+            }
+
         }
+    }
+    
+    public void HoldObject()
+    {
+        Vector3 crossHairPoint = new Vector3(Screen.width / 2f - 30f, Screen.height / 2f + 30f, 0f);
+        Ray playerAim = Camera.main.ScreenPointToRay(crossHairPoint);
+
+        Vector3 nextPos = _playerRoot.transform.position + playerAim.direction * distance;
+        Vector3 currPos = objectHeld.transform.position;
+
+        objectHeld.GetComponent<Rigidbody>().velocity = (nextPos - currPos) * 10;
+
+        if (Vector3.Distance(objectHeld.transform.position, _playerRoot.transform.position) > maxDistanceGrab)
+        {
+            DropObject();
+        }
+    }
+
+    public void DropObject()
+    {
+        isObjectHeld = false;
+        tryPickupObject = false;
+        objectHeld.GetComponent<Rigidbody>().useGravity = true;
+        objectHeld.GetComponent<Rigidbody>().freezeRotation = false;
+        objectHeld = null;
     }
 }
