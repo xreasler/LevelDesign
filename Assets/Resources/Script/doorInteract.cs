@@ -31,7 +31,7 @@ public class doorInteract : MonoBehaviour
     public void Update()
     {
 
-        if(Input.GetKey(KeyCode.B))
+        if(Input.GetMouseButton(0))
         {
             if(!isObjectHeld){
                 TryPickObject();
