@@ -20,6 +20,8 @@ public class doorInteract : MonoBehaviour
     private float PickupRange = 3f;
     private float ThrowStrength = 50f;
 
+    public bool freezeRotation;
+
 
     public void Start()
     {
@@ -38,12 +40,17 @@ public class doorInteract : MonoBehaviour
                 tryPickupObject = true;
             } else 
             {
-                Debug.Log("ATTEMPTING HOLD");
                 HoldObject();
             }
         }else if(isObjectHeld){
             DropObject();
         }
+        // if(Input.GetMouseButton(1) && isObjectHeld){
+        //    Debug.Log("ATTEMTPING THROW");
+        //     isObjectHeld = false;
+        //     objectHeld.GetComponent<Rigidbody>().useGravity = true;
+        //     ThrowObject();
+        // }
         
     }
 
@@ -59,9 +66,9 @@ public class doorInteract : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, range))
         {
-            Debug.Log("CASTING RAY");
+            
             objectHeld = hit.collider.gameObject;
-            if (tryPickupObject == true)
+            if ((hit.collider.tag == "Door") && tryPickupObject == true)
             {
                 Debug.Log("DOOR HIT");
                 isObjectHeld = true;
@@ -73,8 +80,26 @@ public class doorInteract : MonoBehaviour
                 distance = 2f;
                 maxDistanceGrab = 3f;
             }
+            if(hit.collider.tag == "InteractItemsTag" && tryPickupObject){
+                isObjectHeld = true;
+                objectHeld.GetComponent<Rigidbody>().useGravity = true;
+                if(freezeRotation)
+                {
+                    objectHeld.GetComponent<Rigidbody>().freezeRotation = true;
+                }
+                if(freezeRotation == false)
+                {
+                    objectHeld.GetComponent<Rigidbody>().freezeRotation = false;
+                }
+
+                PickupRange = 3f;
+                ThrowStrength = 50f;
+                distance = 3f;
+                maxDistanceGrab = 5f;
+            }
 
         }
+        
     }
     
     public void HoldObject()
@@ -98,6 +123,13 @@ public class doorInteract : MonoBehaviour
         isObjectHeld = false;
         tryPickupObject = false;
         objectHeld.GetComponent<Rigidbody>().useGravity = true;
+        objectHeld.GetComponent<Rigidbody>().freezeRotation = false;
+        objectHeld = null;
+    }
+    private void ThrowObject()
+    {
+        Debug.Log("AM THROWN");
+        objectHeld.GetComponent<Rigidbody>().AddForce(_playerRoot.transform.forward * 60f);
         objectHeld.GetComponent<Rigidbody>().freezeRotation = false;
         objectHeld = null;
     }
